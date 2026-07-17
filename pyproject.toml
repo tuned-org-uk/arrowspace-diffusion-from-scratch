@@ -1,7 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "arrowspace-diffusion-from-scratch"
 version = "0.1.0"
-description = "Add your description here"
+description = "Spectral-geometric diffusion from scratch with ArrowSpace feature-manifold metric"
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.0",
+    "numpy>=1.24",
+    "matplotlib>=3.7",
+    "scipy>=1.10",
+]
+
+[project.optional-dependencies]
+dev = [
+    "jupyterlab>=4.0",
+    "ipykernel>=6.0",
+    "nbformat>=5.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["spectral_diffusion"]
