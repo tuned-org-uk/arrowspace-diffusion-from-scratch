@@ -23,6 +23,8 @@ where $\Pi_F$ is the low-frequency projector from the feature-space Laplacian. T
 ## Setup
 
 ```bash
+uv venv .venv
+source .venv/bin/activate
 uv pip install -e .
 ```
 
