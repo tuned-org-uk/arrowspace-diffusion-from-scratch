@@ -2,7 +2,7 @@
 
 This module mirrors the Euclidean-diffusion tutorial at
 https://chenyang.co/diffusion.html, then extends it with an ArrowSpace-style
-feature-manifold metric M_tau = (1-tau)*I + tau*Pi.
+feature-manifold metric lambda^tau = tau*I + (1-tau)*Pi.
 
 Key design choice (from blog post 021): the forward corruption must use the
 metric's inverse covariance, x_sigma = x_0 + sigma * M^{-1/2} eps, so that the
@@ -112,7 +112,7 @@ class TimeInputMLP(nn.Module):
 # ---------------------------------------------------------------------------
 
 class SpectralGeometry:
-    """Implements M_tau = (1-tau)*I + tau*Pi and metric-matched noise."""
+    """Implements lambda^tau = tau*I + (1-tau)*Pi and metric-matched noise."""
 
     def __init__(self, projector: torch.Tensor, tau: float = 0.5):
         """Args:
@@ -122,7 +122,7 @@ class SpectralGeometry:
         self.Pi = projector
         self.tau = tau
         self.F = projector.shape[0]
-        self.M = (1.0 - tau) * torch.eye(self.F) + tau * projector
+        self.M = tau * torch.eye(self.F) + (1.0 - tau) * projector
         self.M_inv = torch.linalg.inv(self.M)
         self.M_inv_sqrt = self._matrix_inv_sqrt(self.M)
 
@@ -139,7 +139,7 @@ class SpectralGeometry:
     def squared_distance(self, x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
         geometric = ((x - y) ** 2).sum(dim=-1)
         spectral = ((self.project(x) - self.project(y)) ** 2).sum(dim=-1)
-        return (1.0 - self.tau) * geometric + self.tau * spectral
+        return self.tau * geometric + (1.0 - self.tau) * spectral
 
     def corrupt(self, x0: torch.Tensor, sigma: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         """Metric-matched corruption: x_sigma = x_0 + sigma * M^{-1/2} eps."""
@@ -153,7 +153,7 @@ class SpectralGeometry:
     ) -> torch.Tensor:
         geometric = ((x_hat - x_true) ** 2).mean()
         spectral = ((self.project(x_hat) - self.project(x_true)) ** 2).mean()
-        return (1.0 - self.tau) * geometric + self.tau * spectral
+        return self.tau * geometric + (1.0 - self.tau) * spectral
 
     def to(self, device: torch.device) -> "SpectralGeometry":
         self.Pi = self.Pi.to(device)
