@@ -88,3 +88,100 @@ ArrowSpace and feature-space spectral graph Laplacian:
   spectral energy score. Low R = spectrally smooth (on-manifold);
   high R = spectrally rough (off-manifold). This is independent of
   item-space density and nearly orthogonal to KDE/diffusion-based methods.
+
+Key equations from the blog post (tuned.org.uk/posts/021_diffusion_as_spectral_geometric_projection/):
+
+Hybrid distance (tau = geometric weight, 1-tau = spectral weight):
+
+$$
+d_\tau^2(x,y) = \tau \|x-y\|_2^2 + (1-\tau) \|\Pi_F(x-y)\|_2^2
+$$
+
+Metric matrix:
+
+$$
+\lambda^\tau = \tau I + (1-\tau) \Pi_F
+$$
+
+Quadratic form:
+
+$$
+d_\tau^2(x,y) = (x-y)^\top \lambda^\tau (x-y)
+$$
+
+Smoothed squared-distance potential:
+
+$$
+\widetilde d_{\mathcal K,\tau}^2(x,\sigma) = -\sigma^2 \log \sum_{x_0 \in \mathcal K} \exp\left(-\frac{d_\tau^2(x,x_0)}{2\sigma^2}\right)
+$$
+
+Soft assignment weights:
+
+$$
+w_\sigma(x_0 \mid x) = \frac{\exp\left(-d_\tau^2(x,x_0)/(2\sigma^2)\right)}{\sum_{z \in \mathcal K} \exp\left(-d_\tau^2(x,z)/(2\sigma^2)\right)}
+$$
+
+Soft spectral-geometric projection:
+
+$$
+\bar x_\tau(x,\sigma) = \sum_{x_0 \in \mathcal K} w_\sigma(x_0 \mid x) \, x_0
+$$
+
+Gradient of the smoothed potential (preconditioned by the metric):
+
+$$
+\nabla_x \widetilde d_{\mathcal K,\tau}^2(x,\sigma) = 2 \lambda^\tau \left(x - \bar x_\tau(x,\sigma)\right)
+$$
+
+Metric-corrected displacement:
+
+$$
+g_\tau(x,\sigma) = {\lambda^\tau}^{-1} \frac{1}{2} \nabla_x \widetilde d_{\mathcal K,\tau}^2(x,\sigma) = x - \bar x_\tau(x,\sigma)
+$$
+
+Ideal spectral-geometric denoiser:
+
+$$
+\epsilon_\tau^*(x,\sigma) = \frac{1}{\sigma} g_\tau(x,\sigma) = \frac{x - \bar x_\tau(x,\sigma)}{\sigma}
+$$
+
+Clean prediction:
+
+$$
+\hat x_0 = x - \sigma \epsilon_\tau^*(x,\sigma) = \bar x_\tau(x,\sigma)
+$$
+
+Metric-matched forward corruption (critical: without this the Bayes-optimal
+denoiser collapses to the Euclidean conditional mean):
+
+$$
+x_\sigma = x_0 + \sigma \, {\lambda^\tau}^{-1/2} \, \epsilon, \qquad \epsilon \sim \mathcal N(0,I)
+$$
+
+Equivalently:
+
+$$
+x_\sigma \mid x_0 \sim \mathcal N\left(x_0, \; \sigma^2 {\lambda^\tau}^{-1}\right)
+$$
+
+Spectral-geometric reconstruction loss:
+
+$$
+\mathcal L_{\mathrm{SG}}(\theta) = \mathbb E \left[ \tau \|\hat x_0 - x_0\|_2^2 + (1-\tau) \|\Pi_F \hat x_0 - \Pi_F x_0\|_2^2 \right]
+$$
+
+Equivalently:
+
+$$
+\mathcal L_{\mathrm{SG}}(\theta) = \mathbb E \left[ (\hat x_0 - x_0)^\top \lambda^\tau (\hat x_0 - x_0) \right]
+$$
+
+DDIM sampling update (unchanged form, hybrid-geometry interpretation):
+
+$$
+x_{t-1} = x_t - (\sigma_t - \sigma_{t-1}) \, \epsilon_\theta(x_t, \sigma_t)
+$$
+
+At $\tau=0.5$ the precision matrix $\lambda^{0.5} = \frac{1}{2}(I + \Pi_F)$ assigns:
+- precision 1 to spectral directions (where $\Pi_F$ acts as identity)
+- precision $\frac{1}{2}$ to residual directions (where $\Pi_F$ acts as zero)
