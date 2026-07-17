@@ -41,3 +41,50 @@ Project-specific notes:
 * when iterating over sigmas from a Schedule, each element is a 0-D scalar
   tensor; expand to batch size with sig.expand(batchsize) before passing
   to the model
+
+ArrowSpace and feature-space spectral graph Laplacian:
+* ArrowSpace builds a kNN graph over FEATURES (columns of X), not over items
+  (rows). Each feature becomes a node; edges connect features that co-vary
+  across items. This is the dual of the usual item-space kNN graph.
+* the feature matrix is transposed: X_feat = X.T (F x N), so each row is one
+  feature signal sampled at all N items. Cosine similarity between rows gives
+  the F x F affinity matrix S.
+* the kNN graph is built by keeping, for each feature, its k most
+  cosine-similar neighbours. The adjacency W is symmetrised via
+  W = max(W, W.T). The unnormalised Laplacian is L = D - W where
+  D = diag(W.sum(axis=1)).
+* the Laplacian is eigendecomposed as $$L_F = U \Lambda U^\top$$ with
+  eigenvalues sorted ascending. Low eigenvalues = smooth, coherent
+  co-variation; high eigenvalues = rough, noisy, off-manifold.
+* the projector is $$\Pi_F = U_{\le r} U_{\le r}^\top$$ where $U_{\le r}$
+  contains the first r eigenvectors (excluding the trivial constant mode
+  if present). This is an orthogonal projection: $\Pi_F^2 = \Pi_F$ and
+  $\Pi_F^\top = \Pi_F$.
+* choosing r: if r=None, the code picks r by the largest relative spectral
+  gap among the first third of eigenvalues. Alternatively, specify r
+  explicitly (e.g. r=32 for D=128).
+* the projector is FIXED once computed from the training corpus. Never
+  recompute it from noisy minibatches — that changes the geometry being
+  optimised and destroys the fixed-manifold interpretation.
+* the metric $$\lambda^\tau = \tau I + (1-\tau)\Pi_F$$ has eigenvalues:
+  - 1 on spectral directions (where $\Pi_F$ acts as identity) — these
+    directions receive full precision
+  - $\tau$ on residual directions (where $\Pi_F$ acts as zero) — these
+    directions receive precision $\tau$
+* at $\tau=0.5$: spectral directions get precision 1, residual directions
+  get precision 0.5. This means smooth feature-manifold variation is
+  corrupted LESS than off-manifold residual variation.
+* the inverse square root ${\lambda^\tau}^{-1/2}$ is computed once via
+  eigendecomposition and cached. It maps isotropic Gaussian noise into
+  metric-matched noise: $x_\sigma = x_0 + \sigma \cdot {\lambda^\tau}^{-1/2} \epsilon$.
+* for the spectral signal to be non-trivial, the dataset must be
+  sufficiently high-dimensional (D >= 100). At D=2 the feature graph has
+  only 2 nodes and the projector has no meaningful structure.
+* the ArrowSpace library (pip install arrowspace) provides the same
+  feature-Laplacian construction via ArrowSpaceBuilder. The Rust source
+  is at github.com/Mec-iS/arrowspace-rs; Python bindings at
+  github.com/tuned-org-uk/pyarrowspace.
+* the Rayleigh quotient $R(x) = x^\top L_F x / x^\top x$ gives a per-item
+  spectral energy score. Low R = spectrally smooth (on-manifold);
+  high R = spectrally rough (off-manifold). This is independent of
+  item-space density and nearly orthogonal to KDE/diffusion-based methods.
