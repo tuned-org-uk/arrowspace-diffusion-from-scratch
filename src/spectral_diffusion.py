@@ -378,7 +378,7 @@ def sample_euclidean(
     model = model.to(device)
     x = model.rand_input(batchsize, device=device) * sigmas[0]
     for sig, sig_prev in pairwise(sigmas):
-        eps = model(x, sig.to(x))
+        eps = model(x, sig.to(x).expand(x.shape[0]))
         x = x - (sig - sig_prev) * eps
     return x
 
