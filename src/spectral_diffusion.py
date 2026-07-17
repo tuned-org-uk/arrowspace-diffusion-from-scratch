@@ -402,7 +402,7 @@ def sample_spectral(
     z = torch.randn(batchsize, geometry.F, device=device)
     x = z @ geometry.M_inv_sqrt.T * sigmas[0]
     for sig, sig_prev in pairwise(sigmas):
-        eps_M = model(x, sig.to(x))  # model predicts M^{1/2} eps
+        eps_M = model(x, sig.to(x).expand(x.shape[0]))  # model predicts M^{1/2} eps
         eps = eps_M @ geometry.M_inv_sqrt.T
         x = x - (sig - sig_prev) * eps
     return x
