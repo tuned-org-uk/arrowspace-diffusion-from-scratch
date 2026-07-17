@@ -426,7 +426,7 @@ def samples_with_momentum(
     xt = model.rand_input(batchsize, device=device) * sigmas[0]
     eps_prev = None
     for i, (sig, sig_prev) in enumerate(pairwise(sigmas)):
-        eps = model(xt, sig.to(xt))
+        eps = model(xt, sig.to(xt).expand(batchsize))
         if i == 0 or eps_prev is None:
             eps_av = eps
         else:
