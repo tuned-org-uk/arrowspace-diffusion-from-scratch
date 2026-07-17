@@ -23,8 +23,7 @@ where $\Pi_F$ is the low-frequency projector from the feature-space Laplacian. T
 ## Setup
 
 ```bash
-uv pip install --python .venv/bin/python torch numpy matplotlib scipy jupyterlab ipykernel nbformat
-.venv/bin/python -m ipykernel install --user --name arrowspace-diffusion --display-name "Python (arrowspace-diffusion)"
+uv pip install -e .
 ```
 
 ## Run
