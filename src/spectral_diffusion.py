@@ -346,7 +346,9 @@ class IdealSpectralDenoiser:
         weights = torch.nn.functional.softmax(-dist2 / (2 * sigma[:, None] ** 2), dim=1)
         x_bar = torch.einsum("ij,j...->i...", weights, self.data)
         # The model predicts M^{1/2} eps, not raw eps; convert displacement.
-        return self.geometry.M_inv_sqrt @ (x - x_bar).T / sigma
+        disp = x - x_bar  # (B, D)
+        disp_m = disp @ self.geometry.M_inv_sqrt.T  # (B, D)
+        return disp_m / sigma[:, None]  # (B, D)
 
 
 # ---------------------------------------------------------------------------
