@@ -21,6 +21,16 @@ dev = [
     "ipykernel>=6.0",
     "nbformat>=5.0",
 ]
+latent = [
+    "torchvision>=0.18",
+    "diffusers>=0.30",
+    "transformers>=4.40",
+    "datasets>=2.18",
+    "Pillow>=10.0",
+    "tqdm>=4.65",
+    "torchmetrics>=1.3",
+    "scikit-image>=0.22",
+]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
