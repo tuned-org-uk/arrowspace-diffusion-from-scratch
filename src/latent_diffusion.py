@@ -53,6 +53,7 @@ class _HFClassSubset(Dataset):
         import torchvision.transforms as T
         self.transform = T.Compose([
             T.Resize((img_size, img_size)),
+            T.Lambda(lambda im: im.convert('RGB')),
             T.ToTensor(),
             T.Normalize([0.5] * 3, [0.5] * 3),
         ])
