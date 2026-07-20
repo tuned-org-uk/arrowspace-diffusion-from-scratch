@@ -59,24 +59,49 @@ def compute_clip_score(
     images: torch.Tensor,       # (N, 3, H, W) in [-1, 1]
     prompts: Sequence[str],     # one prompt per image (or a single prompt broadcast)
     batch_size: int = 64,
+    model_name: str = "openai/clip-vit-base-patch32",
 ) -> float:
-    """Mean CLIPScore (text-image alignment). Runs on CPU for portability."""
-    from torchmetrics.multimodal import CLIPScore
+    """Mean CLIPScore (text-image alignment, 100 * cosine similarity).
 
-    clip = CLIPScore(model_name_or_path="openai/clip-vit-base-patch32").to('cpu')
+    Uses CLIPModel directly because torchmetrics' CLIPScore wrapper is broken
+    with transformers >= 5 (BaseModelOutputWithPooling has no .norm).
+    Runs on CPU for portability.
+    """
+    from transformers import CLIPModel, CLIPProcessor
+
+    model = CLIPModel.from_pretrained(model_name).to('cpu').eval()
+    processor = CLIPProcessor.from_pretrained(model_name)
+
     if isinstance(prompts, str):
         prompts = [prompts] * len(images)
     assert len(prompts) == len(images), f"{len(prompts)} prompts vs {len(images)} images"
 
     images_cpu = images.detach().cpu()
-    scores = []
+    # CLIP expects [0, 1] uint8 or float; we have [-1, 1] float -> rescale
+    images_01 = (images_cpu * 0.5 + 0.5).clamp(0, 1)
+
+    all_sims = []
     with torch.no_grad():
-        for i in range(0, len(images_cpu), batch_size):
-            b_imgs = images_cpu[i:i+batch_size]
+        for i in range(0, len(images_01), batch_size):
+            b_imgs = images_01[i:i+batch_size]
             b_prompts = list(prompts[i:i+batch_size])
-            s = clip(b_imgs, b_prompts)
-            scores.append(s.item() * len(b_imgs))  # accumulate weighted
-    return sum(scores) / len(images_cpu)
+            inputs = processor(text=b_prompts, images=b_imgs, return_tensors="pt",
+                               padding=True, do_resize=True, do_center_crop=False)
+            img_feat = model.get_image_features(pixel_values=inputs["pixel_values"])
+            txt_feat = model.get_text_features(input_ids=inputs["input_ids"],
+                                               attention_mask=inputs["attention_mask"])
+            # transformers >= 5 returns BaseModelOutputWithPooling; use pooler_output
+            if hasattr(img_feat, 'pooler_output'):
+                img_feat = img_feat.pooler_output
+            if hasattr(txt_feat, 'pooler_output'):
+                txt_feat = txt_feat.pooler_output
+            img_feat = img_feat / img_feat.norm(p=2, dim=-1, keepdim=True)
+            txt_feat = txt_feat / txt_feat.norm(p=2, dim=-1, keepdim=True)
+            sims = (img_feat * txt_feat).sum(dim=-1)  # (B,)
+            all_sims.append(sims)
+    sims = torch.cat(all_sims)
+    # CLIPScore convention: 100 * mean cosine similarity
+    return float(100.0 * sims.mean().item())
 
 
 # ---------------------------------------------------------------------------
