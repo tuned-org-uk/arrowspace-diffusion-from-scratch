@@ -1,0 +1,9 @@
+phase	status	notes
+Identify	PASS	Stage 2 criteria understood (chrF, semantic gap, anti-collapse, R@1)
+Inventory	PASS	Dataset, deps, file list validated
+Checklist	PASS	Architectural fixes itemised
+Prepare	PASS	30-epoch training completed; no blockers
+Dry-run	PASS	Notebook executed via jupyter nbconvert
+Ship	PASS	Notebook updated in place with backup executed
+Verify	PASS	Faithful chrF 94.58, semantic chrF 15.36, R@1 1.000, r_acc<=z_acc
+Log	PASS	Ship artifacts written to autoresearch/ship-260724-1721

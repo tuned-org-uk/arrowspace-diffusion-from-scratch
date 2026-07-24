@@ -1,0 +1,12 @@
+{
+  "version": "2.1.0",
+  "source": "ship",
+  "timestamp": "2026-07-24T17:21:13.124248",
+  "status": "COMPLETE",
+  "findings": [
+    "Original mean-pool bottleneck destroyed positional information; replaced with Perceiver queries.",
+    "Frozen contrastive loss had no gradient path; demoted to monitor-only.",
+    "Dataset schema drift required switch to PAWS labeled_final.",
+    "generate() required BaseModelOutput wrapper and bos_token_id on current transformers."
+  ]
+}
