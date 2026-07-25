@@ -1,0 +1,9 @@
+phase	status	detail
+1-identify	COMPLETE	code-pr auto-detected; target=main branch
+2-inventory	COMPLETE	3 unshipped files (nb07, nb08, nb01); 7 commits already pushed
+3-checklist	COMPLETE	13 items: 5 PASS, 3 NOT_CONFIGURED, 2 FAIL, 3 N/A
+4-prepare	BLOCKED	3 blockers found: B1 (nb07 mid-exec), B2 (nb08 never exec), B3 (stale ckpts)
+5-dry-run	COMPLETE	would ship 3 files as WIP; not recommended
+6-ship	STOPPED	blockers prevent ship; awaiting user decision
+7-verify	SKIPPED	no ship
+8-log	COMPLETE	autoresearch/ship-260720-1407/ written
