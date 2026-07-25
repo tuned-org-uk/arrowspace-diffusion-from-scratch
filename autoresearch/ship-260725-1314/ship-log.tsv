@@ -1,0 +1,9 @@
+phase	status	notes
+Identify	PASS	Issue #5: 4 points (contrastive, probe, MI, gating)
+Inventory	PASS	Notebook + ship logs
+Checklist	PASS	All 4 fixes itemised
+Prepare	PASS	45-epoch training with lam_ret=0.1
+Dry-run	PASS	Notebook executed via nbconvert
+Ship	PASS	Notebook updated in place
+Verify	PASS	chrF 97.10, MI gate PASS, anti-collapse PASS
+Log	PASS	Artifacts written

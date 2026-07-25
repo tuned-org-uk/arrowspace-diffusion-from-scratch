@@ -1,0 +1,12 @@
+{
+  "version": "2.1.0",
+  "source": "ship",
+  "timestamp": "2026-07-25T13:14:29.425628",
+  "status": "COMPLETE",
+  "findings": [
+    "LayerNorm on residual path suppressed reconstruction; removed.",
+    "Identity-init projection head essential for convergence.",
+    "Emotion labels (6 classes) provide a clean semantic-class probe.",
+    "Classifier-based MI lower bound with C=0.01 regularisation avoids overconfident CE."
+  ]
+}
